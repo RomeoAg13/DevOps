@@ -1,0 +1,366 @@
+openapi: 3.0.0
+info:
+  title: FastFoodGo API - Full CRUD Architecture (Fixed)
+  description: |
+    API complète couvrant les 7 modules du TD FastFoodGo.
+    Version corrigée avec définition des paramètres de chemin.
+  version: 2.0.1
+servers:
+  - url: https://api.fastfoodgo.com/v1
+
+tags:
+  - name: Auth
+    description: Gestion des utilisateurs
+  - name: Restaurants
+    description: Gestion des partenaires
+  - name: Meals
+    description: Gestion des plats
+  - name: Cart
+    description: Gestion du panier
+  - name: Orders
+    description: Gestion des commandes
+  - name: Payment
+    description: Gestion des paiements
+  - name: Notifications
+    description: Gestion des messages
+
+paths:
+  # ==========================================
+  # 1. MODULE AUTH
+  # ==========================================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: Compte créé
+  
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Connexion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCredentials'
+      responses:
+        '200':
+          description: Token JWT délivré
+
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: Lire son profil
+      responses:
+        '200':
+          description: Données utilisateur
+    put:
+      tags: [Auth]
+      summary: Mettre à jour le profil
+      responses:
+        '200':
+          description: Profil mis à jour
+    delete:
+      tags: [Auth]
+      summary: Supprimer son compte
+      responses:
+        '204':
+          description: Compte supprimé
+
+  # ==========================================
+  # 2. MODULE RESTAURANTS
+  # ==========================================
+  /restaurants:
+    get:
+      tags: [Restaurants]
+      summary: Lister les restaurants
+      parameters:
+        - name: city
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Liste des restaurants
+    post:
+      tags: [Restaurants]
+      summary: Créer un restaurant
+      responses:
+        '201':
+          description: Restaurant créé
+
+  /restaurants/{id}:
+    # CORRECTION : Définition du paramètre id
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Restaurants]
+      summary: Détail d'un restaurant
+      responses:
+        '200':
+          description: Infos complètes
+    put:
+      tags: [Restaurants]
+      summary: Modifier infos restaurant
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      tags: [Restaurants]
+      summary: Supprimer un restaurant
+      responses:
+        '204':
+          description: Restaurant retiré
+
+  # ==========================================
+  # 3. MODULE MEALS
+  # ==========================================
+  /meals:
+    post:
+      tags: [Meals]
+      summary: Ajouter un plat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealInput'
+      responses:
+        '201':
+          description: Plat ajouté
+
+  /meals/{id}:
+    # CORRECTION : Définition du paramètre id
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Meals]
+      summary: Détail d'un plat
+      responses:
+        '200':
+          description: Ingrédients et prix
+    put:
+      tags: [Meals]
+      summary: Modifier un plat
+      responses:
+        '200':
+          description: Plat modifié
+    delete:
+      tags: [Meals]
+      summary: Retirer un plat
+      responses:
+        '204':
+          description: Plat archivé
+
+  # ==========================================
+  # 4. MODULE CART
+  # ==========================================
+  /cart:
+    get:
+      tags: [Cart]
+      summary: Voir le panier
+      responses:
+        '200':
+          description: Contenu actuel
+    post:
+      tags: [Cart]
+      summary: Ajouter item
+      responses:
+        '200':
+          description: Item ajouté
+    delete:
+      tags: [Cart]
+      summary: Vider le panier
+      responses:
+        '204':
+          description: Panier vidé
+
+  /cart/items/{itemId}:
+    # CORRECTION : Définition du paramètre itemId
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Cart]
+      summary: Changer quantité
+      parameters:
+        - name: quantity
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Quantité mise à jour
+    delete:
+      tags: [Cart]
+      summary: Retirer un item
+      responses:
+        '200':
+          description: Item retiré
+
+  # ==========================================
+  # 5. MODULE ORDERS
+  # ==========================================
+  /orders:
+    get:
+      tags: [Orders]
+      summary: Historique commandes
+      responses:
+        '200':
+          description: Liste des commandes
+    post:
+      tags: [Orders]
+      summary: Passer commande
+      responses:
+        '201':
+          description: Commande créée
+
+  /orders/{id}:
+    # CORRECTION : Définition du paramètre id
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Orders]
+      summary: Suivi commande
+      responses:
+        '200':
+          description: Statut en temps réel
+    put:
+      tags: [Orders]
+      summary: Mettre à jour le statut
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PREPARING, DELIVERING, DELIVERED]
+      responses:
+        '200':
+          description: Statut changé
+    delete:
+      tags: [Orders]
+      summary: Annuler commande
+      responses:
+        '204':
+          description: Commande annulée
+
+  # ==========================================
+  # 6. MODULE PAYMENT
+  # ==========================================
+  /payments/methods:
+    get:
+      tags: [Payment]
+      summary: Mes moyens de paiement
+      responses:
+        '200':
+          description: Liste des cartes
+    post:
+      tags: [Payment]
+      summary: Ajouter une carte
+      responses:
+        '201':
+          description: Token sauvegardé
+
+  /payments/methods/{cardId}:
+    # CORRECTION : Définition du paramètre cardId
+    parameters:
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      tags: [Payment]
+      summary: Définir par défaut
+      responses:
+        '200':
+          description: Carte par défaut mise à jour
+    delete:
+      tags: [Payment]
+      summary: Supprimer une carte
+      responses:
+        '204':
+          description: Supprimé
+
+  # ==========================================
+  # 7. MODULE NOTIFICATIONS
+  # ==========================================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Lire notifications
+      responses:
+        '200':
+          description: Liste des messages
+    post:
+      tags: [Notifications]
+      summary: Envoyer notification
+      responses:
+        '201':
+          description: Envoyé
+
+  /notifications/{id}:
+    # CORRECTION : Définition du paramètre id
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Notifications]
+      summary: Marquer comme lu
+      responses:
+        '200':
+          description: Statut mis à jour
+    delete:
+      tags: [Notifications]
+      summary: Effacer notification
+      responses:
+        '204':
+          description: Supprimé
+
+components:
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        name: { type: string }
+    
+    LoginCredentials:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    MealInput:
+      type: object
+      properties:
+        restaurantId: { type: integer }
+        name: { type: string }
+        price: { type: number }
+        ingredients: { type: array, items: { type: string } }
